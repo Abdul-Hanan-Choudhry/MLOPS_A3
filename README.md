@@ -1,45 +1,156 @@
-Overview
-========
+# NASA APOD MLOps Pipeline
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+An automated data pipeline using Apache Airflow to fetch NASA's Astronomy Picture of the Day (APOD), with MLOps practices including data versioning with DVC.
 
-Project Contents
-================
+## 🚀 Features
 
-Your Astro project contains the following files and folders:
+- **Data Extraction**: Fetches NASA APOD data daily via API
+- **Data Storage**: 
+  - Images saved to local storage
+  - Metadata stored in PostgreSQL database
+  - CSV export for data versioning
+- **Data Versioning**: DVC tracks changes to dataset
+- **Orchestration**: Airflow DAG with task dependencies
+- **Code Versioning**: Git/GitHub for pipeline code
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+## 📁 Project Structure
 
-Deploy Your Project Locally
-===========================
+```
+MLops3/
+├── dags/
+│   └── nasa_apod_dag.py          # Main Airflow DAG
+├── include/
+│   ├── apod_data.csv              # NASA APOD metadata
+│   ├── apod_data.csv.dvc          # DVC tracking file
+│   ├── .dvc/                      # DVC configuration
+│   └── images/                    # Downloaded images
+├── tests/
+│   └── dags/
+│       └── test_dag_example.py    # DAG validation tests
+├── Dockerfile                     # Container definition
+├── requirements.txt               # Python dependencies
+├── docker-compose.override.yml    # Docker compose overrides
+└── .env                          # Environment variables
+```
 
-Start Airflow on your local machine by running 'astro dev start'.
+## 🛠️ Setup & Installation
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+### Prerequisites
+- Docker Desktop
+- Astro CLI (`winget install -e --id Astronomer.Astro`)
+- Git
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+### Installation Steps
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+1. **Clone the repository**
+```bash
+git clone https://github.com/Abdul-Hanan-Choudhry/MLOPS_A3.git
+cd MLOPS_A3
+```
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+2. **Start Airflow**
+```bash
+astro dev start
+```
 
-Deploy Your Project to Astronomer
-=================================
+3. **Access Airflow UI**
+- URL: `http://localhost:8081`
+- Username: `admin`
+- Password: `admin`
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+## 🔧 Configuration
 
-Contact
-=======
+### Environment Variables (.env)
+```env
+nasa_api_key=YOUR_NASA_API_KEY
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=postgres
+```
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+### Database
+- **Host**: postgres (internal) / localhost:5433 (external)
+- **Database**: airflow
+- **Table**: apod_data
+
+## 📊 DAG Details
+
+**DAG ID**: `nasa_apod_pipeline`
+
+**Schedule**: Daily (`@daily`)
+
+**Tasks**:
+1. `fetch_nasa_apod` - Fetches data from NASA API, saves image and CSV
+2. `version_with_dvc` - Tracks CSV changes with DVC
+
+**Tags**: `["nasa", "etl", "mlops"]`
+
+**Retries**: 2
+
+## 🗂️ Data Versioning with DVC
+
+The project uses DVC to version the APOD dataset:
+
+```bash
+# Pull latest data
+dvc pull
+
+# Check data status
+dvc status
+
+# View data changes
+git log include/apod_data.csv.dvc
+```
+
+## 🧪 Testing
+
+Run DAG validation tests:
+```bash
+astro dev pytest
+```
+
+Tests verify:
+- No import errors
+- Required tags present
+- Retry configuration
+
+## 📦 Dependencies
+
+- **requests**: HTTP API calls
+- **pandas**: Data manipulation
+- **psycopg2-binary**: PostgreSQL connectivity
+- **dvc**: Data version control
+- **python-dotenv**: Environment variable management
+
+## 🎯 Pipeline Flow
+
+```
+NASA API → Fetch Data → Save Image → Save CSV → Save to Postgres → DVC Versioning
+```
+
+## 📸 Sample Output
+
+The pipeline generates:
+- **Images**: `/include/images/[title].jpg`
+- **CSV**: `/include/apod_data.csv`
+- **Database**: `apod_data` table in Postgres
+
+## 🤝 Contributing
+
+This is an academic project for MLOps coursework.
+
+## 📄 License
+
+Educational use only.
+
+## 👤 Author
+
+Abdul Hanan Choudhry
+
+## 🔗 Links
+
+- **GitHub Repository**: https://github.com/Abdul-Hanan-Choudhry/MLOPS_A3.git
+- **NASA APOD API**: https://api.nasa.gov/
+```
